@@ -31,11 +31,18 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(level
 bot = Bot(token=API_TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
 dp = Dispatcher()
 
-# Dummy products
+# Products with 40% of card values
 PRODUCTS = [
-    {"name": "1", "price": 15},
-    {"name": "2", "price": 25},
-    {"name": "3", "price": 50},
+    {"name": "1", "price": 127},  # 40% of $317.39
+    {"name": "2", "price": 124},  # 40% of $310.15
+    {"name": "3", "price": 121},  # 40% of $303.42
+    {"name": "4", "price": 121},  # 40% of $303.34
+    {"name": "5", "price": 120},  # 40% of $300.00
+    {"name": "6", "price": 120},  # 40% of $300.00
+    {"name": "7", "price": 118},  # 40% of $294.82
+    {"name": "8", "price": 118},  # 40% of $294.17
+    {"name": "9", "price": 117},  # 40% of $292.72
+    {"name": "10", "price": 117}, # 40% of $292.32
 ]
 
 # In-memory storage
