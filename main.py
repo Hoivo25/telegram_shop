@@ -70,7 +70,8 @@ async def start(message: types.Message):
              InlineKeyboardButton(text="💰 Revenue", callback_data="admin_revenue")],
             [InlineKeyboardButton(text="📊 Analytics", callback_data="admin_analytics"),
              InlineKeyboardButton(text="👤 User List", callback_data="admin_users")],
-            [InlineKeyboardButton(text="🛒 Regular Shop", callback_data="regular_shop")]
+            [InlineKeyboardButton(text="🛍️ Manage Products", callback_data="admin_products"),
+             InlineKeyboardButton(text="🛒 Regular Shop", callback_data="regular_shop")]
         ])
         await message.answer("🔧 <b>Admin Panel</b>\n\nWelcome, Administrator!", reply_markup=admin_kb)
     else:
@@ -79,7 +80,7 @@ async def start(message: types.Message):
 # ----------------------------
 # CALLBACK HANDLERS
 # ----------------------------
-@dp.callback_query(F.data.in_(["view_products", "deposit", "history", "admin_stats", "admin_revenue", "admin_analytics", "admin_users", "regular_shop", "back_to_admin"]))
+@dp.callback_query(F.data.in_(["view_products", "deposit", "history", "admin_stats", "admin_revenue", "admin_analytics", "admin_users", "regular_shop", "back_to_admin", "admin_products"]))
 async def callbacks(call: types.CallbackQuery):
     user_id = call.from_user.id
     if user_id not in USERS:
@@ -101,20 +102,20 @@ async def callbacks(call: types.CallbackQuery):
 
     elif call.data == "deposit":
         await call.message.answer(f"Minimum deposit: ${MIN_DEPOSIT}\nSend the amount in USD.")
-    
+
     # Admin Panel Callbacks
     elif call.data == "admin_stats" and is_admin(user_id):
         total_users = len(USERS)
         total_balance = sum(user_data["balance"] for user_data in USERS.values())
         active_users = len([u for u in USERS.values() if u["history"]])
-        
+
         stats_text = f"📊 <b>Bot Statistics</b>\n\n"
         stats_text += f"👥 Total Users: {total_users}\n"
         stats_text += f"💰 Total Balance: ${total_balance}\n"
         stats_text += f"🔥 Active Users: {active_users}\n"
-        
+
         await call.message.answer(stats_text)
-    
+
     elif call.data == "admin_revenue" and is_admin(user_id):
         total_spent = 0
         for user_data in USERS.values():
@@ -130,20 +131,20 @@ async def callbacks(call: types.CallbackQuery):
                         total_spent += price
                     except:
                         pass
-        
+
         revenue_text = f"💰 <b>Revenue Report</b>\n\n"
         revenue_text += f"💵 Total Revenue: ${total_spent}\n"
         revenue_text += f"🛒 Products Sold: {sum(len([h for h in u['history'] if 'Bought' in h]) for u in USERS.values())}\n"
-        
+
         await call.message.answer(revenue_text)
-    
+
     elif call.data == "admin_analytics" and is_admin(user_id):
         if not USERS:
             await call.message.answer("No user data available.")
         else:
             avg_balance = sum(u["balance"] for u in USERS.values()) / len(USERS)
             max_balance = max(u["balance"] for u in USERS.values())
-            
+
             # Most popular product
             product_sales = {}
             for user_data in USERS.values():
@@ -152,16 +153,16 @@ async def callbacks(call: types.CallbackQuery):
                         for idx, prod in enumerate(PRODUCTS):
                             if prod["name"] in transaction:
                                 product_sales[prod["name"]] = product_sales.get(prod["name"], 0) + 1
-            
+
             most_popular = max(product_sales.items(), key=lambda x: x[1]) if product_sales else ("None", 0)
-            
+
             analytics_text = f"📈 <b>Analytics</b>\n\n"
             analytics_text += f"💰 Average Balance: ${avg_balance:.2f}\n"
             analytics_text += f"🔝 Highest Balance: ${max_balance}\n"
             analytics_text += f"🏆 Most Popular Product: {most_popular[0]} ({most_popular[1]} sales)\n"
-            
+
             await call.message.answer(analytics_text)
-    
+
     elif call.data == "admin_users" and is_admin(user_id):
         if not USERS:
             await call.message.answer("No users registered yet.")
@@ -169,12 +170,23 @@ async def callbacks(call: types.CallbackQuery):
             users_text = f"👤 <b>Registered Users</b>\n\n"
             for idx, (user_id_item, user_data) in enumerate(list(USERS.items())[:10]):  # Show first 10 users
                 users_text += f"{idx+1}. ID: {user_id_item} | Balance: ${user_data['balance']} | Purchases: {len(user_data['history'])}\n"
-            
+
             if len(USERS) > 10:
                 users_text += f"\n... and {len(USERS) - 10} more users"
-            
+
             await call.message.answer(users_text)
-    
+
+    elif call.data == "admin_products" and is_admin(user_id):
+        # Product management interface
+        product_kb = InlineKeyboardMarkup(inline_keyboard=[
+            [InlineKeyboardButton(text="➕ Add Product", callback_data="admin_add_product"),
+             InlineKeyboardButton(text="📝 Edit Product", callback_data="admin_edit_product")],
+            [InlineKeyboardButton(text="🗑️ Delete Product", callback_data="admin_delete_product")],
+            [InlineKeyboardButton(text="🔙 Back to Admin Panel", callback_data="back_to_admin")]
+        ])
+        await call.message.answer("🛍️ <b>Product Management</b>", reply_markup=product_kb)
+
+
     elif call.data == "regular_shop" and is_admin(user_id):
         # Show regular shop interface for admin
         kb = InlineKeyboardMarkup(inline_keyboard=[
@@ -184,14 +196,15 @@ async def callbacks(call: types.CallbackQuery):
             [InlineKeyboardButton(text="🔧 Back to Admin", callback_data="back_to_admin")]
         ])
         await call.message.answer("🛒 Regular Shop Mode", reply_markup=kb)
-    
+
     elif call.data == "back_to_admin" and is_admin(user_id):
         admin_kb = InlineKeyboardMarkup(inline_keyboard=[
             [InlineKeyboardButton(text="👥 User Stats", callback_data="admin_stats"),
              InlineKeyboardButton(text="💰 Revenue", callback_data="admin_revenue")],
             [InlineKeyboardButton(text="📊 Analytics", callback_data="admin_analytics"),
              InlineKeyboardButton(text="👤 User List", callback_data="admin_users")],
-            [InlineKeyboardButton(text="🛒 Regular Shop", callback_data="regular_shop")]
+            [InlineKeyboardButton(text="🛍️ Manage Products", callback_data="admin_products"),
+             InlineKeyboardButton(text="🛒 Regular Shop", callback_data="regular_shop")]
         ])
         await call.message.answer("🔧 <b>Admin Panel</b>", reply_markup=admin_kb)
 
@@ -211,7 +224,7 @@ async def buy_product(call: types.CallbackQuery):
         await call.message.answer(f"You bought {product['name']}! Remaining balance: ${USERS[user_id]['balance']}")
     else:
         await call.message.answer(f"Not enough balance. Please deposit at least ${product['price'] - USERS[user_id]['balance']} more.")
-    
+
     await call.answer()
 
 # ----------------------------
@@ -222,7 +235,7 @@ async def handle_deposit(message: types.Message):
     user_id = message.from_user.id
     if user_id not in USERS:
         USERS[user_id] = {"balance": 0, "history": []}
-    
+
     amount = int(message.text)
     if amount < MIN_DEPOSIT:
         await message.reply(f"Minimum deposit is ${MIN_DEPOSIT}. Please enter a valid amount.")
