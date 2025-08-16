@@ -43,6 +43,16 @@ PRODUCTS = [
     {"name": "8", "price": 118},  # 40% of $294.17
     {"name": "9", "price": 117},  # 40% of $292.72
     {"name": "10", "price": 117}, # 40% of $292.32
+    {"name": "11", "price": 13},  # 40% of $33.66 (Page 2)
+    {"name": "12", "price": 13},  # 40% of $33.47 (Page 2)
+    {"name": "13", "price": 13},  # 40% of $33.40 (Page 2)
+    {"name": "14", "price": 13},  # 40% of $33.06 (Page 2)
+    {"name": "15", "price": 13},  # 40% of $32.98 (Page 2)
+    {"name": "16", "price": 13},  # 40% of $32.93 (Page 2)
+    {"name": "17", "price": 13},  # 40% of $32.70 (Page 2)
+    {"name": "18", "price": 13},  # 40% of $32.61 (Page 2)
+    {"name": "19", "price": 13},  # 40% of $32.57 (Page 2)
+    {"name": "20", "price": 13},  # 40% of $32.51 (Page 2)
 ]
 
 # In-memory storage
