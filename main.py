@@ -89,11 +89,31 @@ async def callbacks(call: types.CallbackQuery):
         USERS[user_id] = {"balance": 0, "history": []}
 
     if call.data == "view_products":
+        # Card listings
+        card_text = "🏦 <b>Available Cards</b>\n\n"
+        card_text += "1. 435880xx:US$317.39: 🔒 at 50%\n"
+        card_text += "2. 435880xx:US$310.15: 🔒 at 50%\n"
+        card_text += "3. 435880xx:US$303.42: 🔒 at 50%\n"
+        card_text += "4. 435880xx:US$303.34: 🔒 at 50%\n"
+        card_text += "5. 435880xx:US$300.00: 🔒 at 45%\n"
+        card_text += "6. 435880xx:US$300.00: 🔒 at 50%\n"
+        card_text += "7. 511332xx:US$294.82: 🔒 at 50%\n"
+        card_text += "8. 435880xx:US$294.17: 🔒 at 50%\n"
+        card_text += "9. 435880xx:US$292.72: 🔒 at 50%\n"
+        card_text += "10. 435880xx:US$292.32: 🔒 at 50%\n\n"
+        card_text += "<b>Legend:</b>\n"
+        card_text += "🔒 - Card is registered\n"
+        card_text += "✅ - Card is not registered\n"
+        card_text += "⚠️ - Card has been used on Google\n\n"
+        
+        # Keep the original products as well
+        card_text += "<b>Other Products:</b>"
+        
         kb = InlineKeyboardMarkup(inline_keyboard=[
             [InlineKeyboardButton(text=f"{prod['name']} - ${prod['price']}", callback_data=f"buy_{idx}")]
             for idx, prod in enumerate(PRODUCTS)
         ])
-        await call.message.answer("Available Products:", reply_markup=kb)
+        await call.message.answer(card_text, reply_markup=kb)
 
     elif call.data == "history":
         history = USERS[user_id]["history"]
