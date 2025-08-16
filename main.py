@@ -13,7 +13,7 @@ from aiogram.client.default import DefaultBotProperties
 # ----------------------------
 API_TOKEN = "8314185541:AAFDFgYP5CHLA8HVwvJBjcz0iXquepM2VWc"
 NOWPAYMENTS_API_KEY = "WEP7ZF7-MJ44V90-G433PT9-HGDER2Q"
-IPN_URL = ""  # Replace with your Serveo URL
+IPN_URL = "https://your-repl-url.repl.co/ipn"  # Replace with your actual Repl URL
 
 MIN_DEPOSIT = 10  # Minimum deposit in USD
 
@@ -114,11 +114,30 @@ async def handle_deposit(message: types.Message):
         await message.reply(f"Minimum deposit is ${MIN_DEPOSIT}. Please enter a valid amount.")
         return
 
-    # Add amount directly to user's balance
-    USERS[user_id]["balance"] += amount
-    USERS[user_id]["history"].append(f"Deposited ${amount}")
-    
-    await message.reply(f"✅ Successfully deposited ${amount}!\nYour balance: ${USERS[user_id]['balance']}")
+    order_id = str(uuid.uuid4())
+    payment_data = {
+        "price_amount": amount,
+        "price_currency": "USD",
+        "order_id": order_id,
+        "ipn_callback_url": IPN_URL
+    }
+
+    headers = {
+        "x-api-key": NOWPAYMENTS_API_KEY,
+        "Content-Type": "application/json"
+    }
+
+    try:
+        response = requests.post("https://api.nowpayments.io/v1/invoice", json=payment_data, headers=headers)
+        res_json = response.json()
+        if response.status_code == 200 and "invoice_url" in res_json:
+            await message.reply(f"💰 Deposit Invoice Created!\n\n💵 Amount: ${amount}\n🔗 Payment Link: {res_json['invoice_url']}\n\n⏰ Complete your payment to add funds to your balance.")
+        else:
+            logging.error(f"NOWPayments API Error: {res_json}")
+            await message.reply("⚠️ Error creating payment invoice. Please try again later.")
+    except Exception as e:
+        logging.error(f"NOWPayments Request Error: {e}")
+        await message.reply("⚠️ Error connecting to payment processor. Please try again later.")
 
 # ----------------------------
 # RUN BOT
