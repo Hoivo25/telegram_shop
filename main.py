@@ -106,35 +106,19 @@ async def buy_product(call: types.CallbackQuery):
 @dp.message(F.text.regexp(r'^\d+$'))
 async def handle_deposit(message: types.Message):
     user_id = message.from_user.id
+    if user_id not in USERS:
+        USERS[user_id] = {"balance": 0, "history": []}
+    
     amount = int(message.text)
     if amount < MIN_DEPOSIT:
         await message.reply(f"Minimum deposit is ${MIN_DEPOSIT}. Please enter a valid amount.")
         return
 
-    order_id = str(uuid.uuid4())
-    payment_data = {
-        "price_amount": amount,
-        "price_currency": "USD",
-        "order_id": order_id,
-        "ipn_callback_url": IPN_URL
-    }
-
-    headers = {
-        "x-api-key": NOWPAYMENTS_API_KEY,
-        "Content-Type": "application/json"
-    }
-
-    try:
-        response = requests.post("https://api.nowpayments.io/v1/invoice", json=payment_data, headers=headers)
-        res_json = response.json()
-        if response.status_code == 200 and "invoice_url" in res_json:
-            await message.reply(f"Deposit created! Pay here: {res_json['invoice_url']}")
-        else:
-            logging.error(res_json)
-            await message.reply("⚠️ Error creating payment. Try again later.")
-    except Exception as e:
-        logging.error(e)
-        await message.reply("⚠️ Error creating payment. Try again later.")
+    # Add amount directly to user's balance
+    USERS[user_id]["balance"] += amount
+    USERS[user_id]["history"].append(f"Deposited ${amount}")
+    
+    await message.reply(f"✅ Successfully deposited ${amount}!\nYour balance: ${USERS[user_id]['balance']}")
 
 # ----------------------------
 # RUN BOT
