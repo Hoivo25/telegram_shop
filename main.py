@@ -80,7 +80,7 @@ async def start(message: types.Message):
 # ----------------------------
 # CALLBACK HANDLERS
 # ----------------------------
-@dp.callback_query(F.data.in_(["view_products", "deposit", "history", "admin_stats", "admin_revenue", "admin_analytics", "admin_users", "regular_shop", "back_to_admin", "admin_products"]))
+@dp.callback_query(F.data.in_(["view_products", "deposit", "history", "admin_stats", "admin_revenue", "admin_analytics", "admin_users", "regular_shop", "back_to_admin", "admin_products", "admin_add_product", "admin_edit_product", "admin_delete_product"]))
 async def callbacks(call: types.CallbackQuery):
     user_id = call.from_user.id
     if user_id not in USERS:
@@ -186,6 +186,28 @@ async def callbacks(call: types.CallbackQuery):
         ])
         await call.message.answer("🛍️ <b>Product Management</b>", reply_markup=product_kb)
 
+    elif call.data == "admin_add_product" and is_admin(user_id):
+        await call.message.answer("➕ <b>Add New Product</b>\n\nSend product details in this format:\nADD:Product Name:Price\n\nExample: ADD:Premium Account:30")
+
+    elif call.data == "admin_edit_product" and is_admin(user_id):
+        if not PRODUCTS:
+            await call.message.answer("No products available to edit.")
+        else:
+            products_text = "📝 <b>Edit Product</b>\n\nCurrent Products:\n"
+            for idx, prod in enumerate(PRODUCTS):
+                products_text += f"{idx}. {prod['name']} - ${prod['price']}\n"
+            products_text += "\nTo edit, send: EDIT:ProductIndex:NewName:NewPrice\nExample: EDIT:0:New Product Name:25"
+            await call.message.answer(products_text)
+
+    elif call.data == "admin_delete_product" and is_admin(user_id):
+        if not PRODUCTS:
+            await call.message.answer("No products available to delete.")
+        else:
+            products_text = "🗑️ <b>Delete Product</b>\n\nCurrent Products:\n"
+            for idx, prod in enumerate(PRODUCTS):
+                products_text += f"{idx}. {prod['name']} - ${prod['price']}\n"
+            products_text += "\nTo delete, send: DELETE:ProductIndex\nExample: DELETE:0"
+            await call.message.answer(products_text)
 
     elif call.data == "regular_shop" and is_admin(user_id):
         # Show regular shop interface for admin
@@ -226,6 +248,95 @@ async def buy_product(call: types.CallbackQuery):
         await call.message.answer(f"Not enough balance. Please deposit at least ${product['price'] - USERS[user_id]['balance']} more.")
 
     await call.answer()
+
+# ----------------------------
+# MESSAGE HANDLERS FOR ADMIN PRODUCT MANAGEMENT
+# ----------------------------
+@dp.message(F.text.startswith("ADD:"))
+async def handle_add_product(message: types.Message):
+    user_id = message.from_user.id
+    if not is_admin(user_id):
+        return
+    
+    try:
+        parts = message.text.split(":")
+        if len(parts) != 3:
+            await message.reply("❌ Invalid format. Use: ADD:Product Name:Price")
+            return
+        
+        product_name = parts[1].strip()
+        product_price = int(parts[2].strip())
+        
+        if product_price <= 0:
+            await message.reply("❌ Price must be greater than 0.")
+            return
+        
+        PRODUCTS.append({"name": product_name, "price": product_price})
+        await message.reply(f"✅ Product '{product_name}' added successfully for ${product_price}!")
+        
+    except ValueError:
+        await message.reply("❌ Invalid price. Please enter a valid number.")
+    except Exception as e:
+        await message.reply(f"❌ Error adding product: {e}")
+
+@dp.message(F.text.startswith("EDIT:"))
+async def handle_edit_product(message: types.Message):
+    user_id = message.from_user.id
+    if not is_admin(user_id):
+        return
+    
+    try:
+        parts = message.text.split(":")
+        if len(parts) != 4:
+            await message.reply("❌ Invalid format. Use: EDIT:ProductIndex:NewName:NewPrice")
+            return
+        
+        product_index = int(parts[1].strip())
+        new_name = parts[2].strip()
+        new_price = int(parts[3].strip())
+        
+        if product_index < 0 or product_index >= len(PRODUCTS):
+            await message.reply(f"❌ Invalid product index. Choose between 0 and {len(PRODUCTS)-1}.")
+            return
+        
+        if new_price <= 0:
+            await message.reply("❌ Price must be greater than 0.")
+            return
+        
+        old_product = PRODUCTS[product_index]
+        PRODUCTS[product_index] = {"name": new_name, "price": new_price}
+        await message.reply(f"✅ Product updated!\nOld: {old_product['name']} - ${old_product['price']}\nNew: {new_name} - ${new_price}")
+        
+    except (ValueError, IndexError):
+        await message.reply("❌ Invalid format or index. Use: EDIT:ProductIndex:NewName:NewPrice")
+    except Exception as e:
+        await message.reply(f"❌ Error editing product: {e}")
+
+@dp.message(F.text.startswith("DELETE:"))
+async def handle_delete_product(message: types.Message):
+    user_id = message.from_user.id
+    if not is_admin(user_id):
+        return
+    
+    try:
+        parts = message.text.split(":")
+        if len(parts) != 2:
+            await message.reply("❌ Invalid format. Use: DELETE:ProductIndex")
+            return
+        
+        product_index = int(parts[1].strip())
+        
+        if product_index < 0 or product_index >= len(PRODUCTS):
+            await message.reply(f"❌ Invalid product index. Choose between 0 and {len(PRODUCTS)-1}.")
+            return
+        
+        deleted_product = PRODUCTS.pop(product_index)
+        await message.reply(f"✅ Product '{deleted_product['name']}' deleted successfully!")
+        
+    except (ValueError, IndexError):
+        await message.reply("❌ Invalid format or index. Use: DELETE:ProductIndex")
+    except Exception as e:
+        await message.reply(f"❌ Error deleting product: {e}")
 
 # ----------------------------
 # MESSAGE HANDLER FOR DEPOSITS
