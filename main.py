@@ -2,9 +2,10 @@ import asyncio
 import logging
 import uuid
 import requests
-from aiogram import Bot, Dispatcher, types
+from aiogram import Bot, Dispatcher, types, F
 from aiogram.enums import ParseMode
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+from aiogram.filters import Command
 
 # ----------------------------
 # CONFIGURATION
@@ -39,45 +40,35 @@ USERS = {}
 # ----------------------------
 # START COMMAND
 # ----------------------------
-@dp.message(commands=["start"])
+@dp.message(Command("start"))
 async def start(message: types.Message):
     user_id = message.from_user.id
     if user_id not in USERS:
         USERS[user_id] = {"balance": 0, "history": []}
 
-    kb = InlineKeyboardMarkup(row_width=2)
-    kb.add(
-        InlineKeyboardButton("View Products", callback_data="view_products"),
-        InlineKeyboardButton("Deposit", callback_data="deposit"),
-        InlineKeyboardButton("Purchase History", callback_data="history"),
-        InlineKeyboardButton("Support", url="https://t.me/YOUR_SUPPORT_USERNAME")
-    )
+    kb = InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="View Products", callback_data="view_products"),
+         InlineKeyboardButton(text="Deposit", callback_data="deposit")],
+        [InlineKeyboardButton(text="Purchase History", callback_data="history")],
+        [InlineKeyboardButton(text="Support", url="https://t.me/YOUR_SUPPORT_USERNAME")]
+    ])
     await message.answer("Welcome to the Telegram Shop!", reply_markup=kb)
 
 # ----------------------------
 # CALLBACK HANDLERS
 # ----------------------------
-@dp.callback_query(lambda c: True)
+@dp.callback_query(F.data.in_(["view_products", "deposit", "history"]))
 async def callbacks(call: types.CallbackQuery):
     user_id = call.from_user.id
     if user_id not in USERS:
         USERS[user_id] = {"balance": 0, "history": []}
 
     if call.data == "view_products":
-        kb = InlineKeyboardMarkup()
-        for idx, prod in enumerate(PRODUCTS):
-            kb.add(InlineKeyboardButton(f"{prod['name']} - ${prod['price']}", callback_data=f"buy_{idx}"))
+        kb = InlineKeyboardMarkup(inline_keyboard=[
+            [InlineKeyboardButton(text=f"{prod['name']} - ${prod['price']}", callback_data=f"buy_{idx}")]
+            for idx, prod in enumerate(PRODUCTS)
+        ])
         await call.message.answer("Available Products:", reply_markup=kb)
-
-    elif call.data.startswith("buy_"):
-        idx = int(call.data.split("_")[1])
-        product = PRODUCTS[idx]
-        if USERS[user_id]["balance"] >= product["price"]:
-            USERS[user_id]["balance"] -= product["price"]
-            USERS[user_id]["history"].append(f"Bought {product['name']} for ${product['price']}")
-            await call.message.answer(f"You bought {product['name']}! Remaining balance: ${USERS[user_id]['balance']}")
-        else:
-            await call.message.answer(f"Not enough balance. Please deposit at least ${product['price'] - USERS[user_id]['balance']} more.")
 
     elif call.data == "history":
         history = USERS[user_id]["history"]
@@ -89,10 +80,29 @@ async def callbacks(call: types.CallbackQuery):
     elif call.data == "deposit":
         await call.message.answer(f"Minimum deposit: ${MIN_DEPOSIT}\nSend the amount in USD.")
 
+    await call.answer()
+
+@dp.callback_query(F.data.startswith("buy_"))
+async def buy_product(call: types.CallbackQuery):
+    user_id = call.from_user.id
+    if user_id not in USERS:
+        USERS[user_id] = {"balance": 0, "history": []}
+
+    idx = int(call.data.split("_")[1])
+    product = PRODUCTS[idx]
+    if USERS[user_id]["balance"] >= product["price"]:
+        USERS[user_id]["balance"] -= product["price"]
+        USERS[user_id]["history"].append(f"Bought {product['name']} for ${product['price']}")
+        await call.message.answer(f"You bought {product['name']}! Remaining balance: ${USERS[user_id]['balance']}")
+    else:
+        await call.message.answer(f"Not enough balance. Please deposit at least ${product['price'] - USERS[user_id]['balance']} more.")
+    
+    await call.answer()
+
 # ----------------------------
 # MESSAGE HANDLER FOR DEPOSITS
 # ----------------------------
-@dp.message(lambda message: message.text.isdigit())
+@dp.message(F.text.regexp(r'^\d+$'))
 async def handle_deposit(message: types.Message):
     user_id = message.from_user.id
     amount = int(message.text)
