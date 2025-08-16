@@ -75,7 +75,7 @@ async def start(message: types.Message):
         ])
         await message.answer("🔧 <b>Admin Panel</b>\n\nWelcome, Administrator!", reply_markup=admin_kb)
     else:
-        await message.answer("Welcome to the Telegram Shop!", reply_markup=kb)
+        await message.answer("Welcome to the Prepaids Shop!", reply_markup=kb)
 
 # ----------------------------
 # CALLBACK HANDLERS
