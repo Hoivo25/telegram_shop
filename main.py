@@ -293,12 +293,12 @@ async def callbacks(call: types.CallbackQuery):
         card_text += "⚠️ - Card has been used on Google\n\n"
         
         # Keep the original products as well
-        card_text += "<b>Other Products:</b>"
+        card_text += "<b>Products (Page 2):</b>"
         
-        # Create keyboard with pagination and product buttons
+        # Create keyboard with only Page 2 products (items 10-19, numbered 1-10)
         product_buttons = [
-            [InlineKeyboardButton(text=f"{prod['name']} - ${prod['price']}", callback_data=f"buy_{idx}")]
-            for idx, prod in enumerate(PRODUCTS)
+            [InlineKeyboardButton(text=f"{PRODUCTS[idx]['name']} - ${PRODUCTS[idx]['price']}", callback_data=f"buy_{idx}")]
+            for idx in range(10, min(20, len(PRODUCTS)))
         ]
         # Add back to page 1 button
         product_buttons.append([InlineKeyboardButton(text="⬅️ Previous Page", callback_data="view_products")])
