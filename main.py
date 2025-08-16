@@ -13,7 +13,7 @@ from aiogram.client.default import DefaultBotProperties
 # ----------------------------
 API_TOKEN = "8314185541:AAFDFgYP5CHLA8HVwvJBjcz0iXquepM2VWc"
 NOWPAYMENTS_API_KEY = "WEP7ZF7-MJ44V90-G433PT9-HGDER2Q"
-IPN_URL = "https://8815990bfd405cb8cb93e8ea52d9ff2f.serveo.net/ipn"  # Replace with your Serveo URL
+IPN_URL = ""  # Replace with your Serveo URL
 
 MIN_DEPOSIT = 10  # Minimum deposit in USD
 
