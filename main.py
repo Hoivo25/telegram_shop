@@ -43,6 +43,16 @@ PRODUCTS = [
     {"name": "8", "price": 118},  # 40% of $294.17
     {"name": "9", "price": 117},  # 40% of $292.72
     {"name": "10", "price": 117}, # 40% of $292.32
+    {"name": "1", "price": 13},   # 40% of $33.66 (Page 2)
+    {"name": "2", "price": 13},   # 40% of $33.47 (Page 2)
+    {"name": "3", "price": 13},   # 40% of $33.40 (Page 2)
+    {"name": "4", "price": 13},   # 40% of $33.06 (Page 2)
+    {"name": "5", "price": 13},   # 40% of $32.98 (Page 2)
+    {"name": "6", "price": 13},   # 40% of $32.93 (Page 2)
+    {"name": "7", "price": 13},   # 40% of $32.70 (Page 2)
+    {"name": "8", "price": 13},   # 40% of $32.61 (Page 2)
+    {"name": "9", "price": 13},   # 40% of $32.57 (Page 2)
+    {"name": "10", "price": 13},  # 40% of $32.51 (Page 2)
 ]
 
 # In-memory storage
@@ -285,10 +295,13 @@ async def callbacks(call: types.CallbackQuery):
         # Keep the original products as well
         card_text += "<b>Products (Page 2):</b>"
         
-        # Page 2 has no products to purchase
+        # Create keyboard with Page 2 products (items 10-19, numbered 1-10)
         product_buttons = [
-            [InlineKeyboardButton(text="⬅️ Previous Page", callback_data="view_products")]
+            [InlineKeyboardButton(text=f"{PRODUCTS[idx]['name']} - ${PRODUCTS[idx]['price']}", callback_data=f"buy_{idx}")]
+            for idx in range(10, min(20, len(PRODUCTS)))
         ]
+        # Add back to page 1 button
+        product_buttons.append([InlineKeyboardButton(text="⬅️ Previous Page", callback_data="view_products")])
         
         kb = InlineKeyboardMarkup(inline_keyboard=product_buttons)
         await call.message.answer(card_text, reply_markup=kb)
