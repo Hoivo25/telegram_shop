@@ -63,6 +63,8 @@ async def start(message: types.Message):
         [InlineKeyboardButton(text="Purchase History", callback_data="history")],
         [InlineKeyboardButton(text="Support", url="https://t.me/Legitplaysonly")]
     ])
+    user_balance = USERS[user_id]["balance"]
+    
     if is_admin(user_id):
         # Admin panel
         admin_kb = InlineKeyboardMarkup(inline_keyboard=[
@@ -73,9 +75,9 @@ async def start(message: types.Message):
             [InlineKeyboardButton(text="🛍️ Manage Products", callback_data="admin_products"),
              InlineKeyboardButton(text="🛒 Regular Shop", callback_data="regular_shop")]
         ])
-        await message.answer("🔧 <b>Admin Panel</b>\n\nWelcome, Administrator!", reply_markup=admin_kb)
+        await message.answer(f"🔧 <b>Admin Panel</b>\n\nWelcome, Administrator!\n💰 Your Balance: ${user_balance}", reply_markup=admin_kb)
     else:
-        await message.answer("Welcome to the Prepaids Shop!", reply_markup=kb)
+        await message.answer(f"Welcome to the Prepaids Shop!\n💰 Your Balance: ${user_balance}", reply_markup=kb)
 
 # ----------------------------
 # CALLBACK HANDLERS
