@@ -31,29 +31,36 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(level
 bot = Bot(token=API_TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
 dp = Dispatcher()
 
-# Products with 40% of card values
-PRODUCTS = [
-    {"name": "1", "price": 127},  # 40% of $317.39
-    {"name": "2", "price": 124},  # 40% of $310.15
-    {"name": "3", "price": 121},  # 40% of $303.42
-    {"name": "4", "price": 121},  # 40% of $303.34
-    {"name": "5", "price": 120},  # 40% of $300.00
-    {"name": "6", "price": 120},  # 40% of $300.00
-    {"name": "7", "price": 118},  # 40% of $294.82
-    {"name": "8", "price": 118},  # 40% of $294.17
-    {"name": "9", "price": 117},  # 40% of $292.72
-    {"name": "10", "price": 117}, # 40% of $292.32
-    {"name": "1", "price": 13},   # 40% of $33.66 (Page 2)
-    {"name": "2", "price": 13},   # 40% of $33.47 (Page 2)
-    {"name": "3", "price": 13},   # 40% of $33.40 (Page 2)
-    {"name": "4", "price": 13},   # 40% of $33.06 (Page 2)
-    {"name": "5", "price": 13},   # 40% of $32.98 (Page 2)
-    {"name": "6", "price": 13},   # 40% of $32.93 (Page 2)
-    {"name": "7", "price": 13},   # 40% of $32.70 (Page 2)
-    {"name": "8", "price": 13},   # 40% of $32.61 (Page 2)
-    {"name": "9", "price": 13},   # 40% of $32.57 (Page 2)
-    {"name": "10", "price": 13},  # 40% of $32.51 (Page 2)
+# Products with 40% of card values - Page 1 (1-10)
+PRODUCTS_PAGE_1 = [
+    {"name": "Card 1", "price": 127},  # 40% of $317.39
+    {"name": "Card 2", "price": 124},  # 40% of $310.15
+    {"name": "Card 3", "price": 121},  # 40% of $303.42
+    {"name": "Card 4", "price": 121},  # 40% of $303.34
+    {"name": "Card 5", "price": 120},  # 40% of $300.00
+    {"name": "Card 6", "price": 120},  # 40% of $300.00
+    {"name": "Card 7", "price": 118},  # 40% of $294.82
+    {"name": "Card 8", "price": 118},  # 40% of $294.17
+    {"name": "Card 9", "price": 117},  # 40% of $292.72
+    {"name": "Card 10", "price": 117}, # 40% of $292.32
 ]
+
+# Products with 40% of card values - Page 2 (1-10)
+PRODUCTS_PAGE_2 = [
+    {"name": "Card 1", "price": 13},   # 40% of $33.66
+    {"name": "Card 2", "price": 13},   # 40% of $33.47
+    {"name": "Card 3", "price": 13},   # 40% of $33.40
+    {"name": "Card 4", "price": 13},   # 40% of $33.06
+    {"name": "Card 5", "price": 13},   # 40% of $32.98
+    {"name": "Card 6", "price": 13},   # 40% of $32.93
+    {"name": "Card 7", "price": 13},   # 40% of $32.70
+    {"name": "Card 8", "price": 13},   # 40% of $32.61
+    {"name": "Card 9", "price": 13},   # 40% of $32.57
+    {"name": "Card 10", "price": 13},  # 40% of $32.51
+]
+
+# Combined products for backwards compatibility
+PRODUCTS = PRODUCTS_PAGE_1 + PRODUCTS_PAGE_2
 
 # In-memory storage
 USERS = {}
@@ -123,13 +130,12 @@ async def callbacks(call: types.CallbackQuery):
         card_text += "✅ - Card is not registered\n"
         card_text += "⚠️ - Card has been used on Google\n\n"
         
-        # Keep the original products as well
-        card_text += "<b>Other Products:</b>"
+        card_text += "<b>Products (1-10):</b>"
         
-        # Create keyboard with pagination and product buttons
+        # Create keyboard with only page 1 products
         product_buttons = [
-            [InlineKeyboardButton(text=f"{prod['name']} - ${prod['price']}", callback_data=f"buy_{idx}")]
-            for idx, prod in enumerate(PRODUCTS)
+            [InlineKeyboardButton(text=f"{idx+1}. {prod['name']} - ${prod['price']}", callback_data=f"buy_page1_{idx}")]
+            for idx, prod in enumerate(PRODUCTS_PAGE_1)
         ]
         # Add pagination button
         product_buttons.append([InlineKeyboardButton(text="➡️ Next Page", callback_data="cards_page_2")])
@@ -292,13 +298,12 @@ async def callbacks(call: types.CallbackQuery):
         card_text += "✅ - Card is not registered\n"
         card_text += "⚠️ - Card has been used on Google\n\n"
         
-        # Keep the original products as well
-        card_text += "<b>Products (Page 2):</b>"
+        card_text += "<b>Products (1-10):</b>"
         
-        # Create keyboard with Page 2 products (items 10-19, numbered 1-10)
+        # Create keyboard with only page 2 products (numbered 1-10)
         product_buttons = [
-            [InlineKeyboardButton(text=f"{PRODUCTS[idx]['name']} - ${PRODUCTS[idx]['price']}", callback_data=f"buy_{idx}")]
-            for idx in range(10, min(20, len(PRODUCTS)))
+            [InlineKeyboardButton(text=f"{idx+1}. {prod['name']} - ${prod['price']}", callback_data=f"buy_page2_{idx}")]
+            for idx, prod in enumerate(PRODUCTS_PAGE_2)
         ]
         # Add back to page 1 button
         product_buttons.append([InlineKeyboardButton(text="⬅️ Previous Page", callback_data="view_products")])
@@ -314,14 +319,37 @@ async def buy_product(call: types.CallbackQuery):
     if user_id not in USERS:
         USERS[user_id] = {"balance": 0, "history": []}
 
-    idx = int(call.data.split("_")[1])
-    product = PRODUCTS[idx]
+    # Parse the callback data
+    parts = call.data.split("_")
+    
+    if len(parts) == 3:  # buy_page1_0 or buy_page2_0
+        page = parts[1]
+        idx = int(parts[2])
+        
+        if page == "page1":
+            product = PRODUCTS_PAGE_1[idx]
+            product_display_name = f"Page 1 - {product['name']}"
+        elif page == "page2":
+            product = PRODUCTS_PAGE_2[idx]
+            product_display_name = f"Page 2 - {product['name']}"
+        else:
+            await call.answer("Invalid product selection")
+            return
+    else:  # Legacy format buy_0 (backwards compatibility)
+        idx = int(parts[1])
+        if idx < len(PRODUCTS):
+            product = PRODUCTS[idx]
+            product_display_name = product['name']
+        else:
+            await call.answer("Invalid product selection")
+            return
+    
     if USERS[user_id]["balance"] >= product["price"]:
         USERS[user_id]["balance"] -= product["price"]
-        USERS[user_id]["history"].append(f"Bought {product['name']} for ${product['price']}")
-        await call.message.answer(f"You bought {product['name']}! Remaining balance: ${USERS[user_id]['balance']}")
+        USERS[user_id]["history"].append(f"Bought {product_display_name} for ${product['price']}")
+        await call.message.answer(f"✅ You bought {product_display_name}! Remaining balance: ${USERS[user_id]['balance']}")
     else:
-        await call.message.answer(f"Not enough balance. Please deposit at least ${product['price'] - USERS[user_id]['balance']} more.")
+        await call.message.answer(f"❌ Not enough balance. Please deposit at least ${product['price'] - USERS[user_id]['balance']} more.")
 
     await call.answer()
 
