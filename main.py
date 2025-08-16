@@ -6,6 +6,7 @@ from aiogram import Bot, Dispatcher, types, F
 from aiogram.enums import ParseMode
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.filters import Command
+from aiogram.client.default import DefaultBotProperties
 
 # ----------------------------
 # CONFIGURATION
@@ -24,7 +25,7 @@ logging.basicConfig(level=logging.INFO)
 # ----------------------------
 # BOT AND DISPATCHER
 # ----------------------------
-bot = Bot(token=API_TOKEN, parse_mode=ParseMode.HTML)
+bot = Bot(token=API_TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
 dp = Dispatcher()
 
 # Dummy products
