@@ -218,7 +218,7 @@ async def start(message: types.Message):
 # ----------------------------
 # CALLBACK HANDLERS
 # ----------------------------
-@dp.callback_query(F.data.in_(["view_products", "deposit", "history", "admin_stats", "admin_revenue", "admin_analytics", "admin_users", "regular_shop", "back_to_admin", "admin_products", "admin_add_product", "admin_edit_product", "admin_delete_product", "cards_page_2", "cards_page_3", "cards_page_4", "cards_page_5", "cards_page_6", "cards_page_7", "cards_page_8", "cards_page_9", "cards_page_10"]))
+@dp.callback_query(F.data.in_(["view_products", "deposit", "history", "admin_stats", "admin_revenue", "admin_analytics", "admin_users", "regular_shop", "back_to_admin", "admin_products", "admin_add_product", "admin_edit_product", "admin_delete_product", "admin_add_funds", "cards_page_2", "cards_page_3", "cards_page_4", "cards_page_5", "cards_page_6", "cards_page_7", "cards_page_8", "cards_page_9", "cards_page_10"]))
 async def callbacks(call: types.CallbackQuery):
     user_id = call.from_user.id
     if user_id not in USERS:
@@ -343,7 +343,8 @@ async def callbacks(call: types.CallbackQuery):
         product_kb = InlineKeyboardMarkup(inline_keyboard=[
             [InlineKeyboardButton(text="➕ Add Product", callback_data="admin_add_product"),
              InlineKeyboardButton(text="📝 Edit Product", callback_data="admin_edit_product")],
-            [InlineKeyboardButton(text="🗑️ Delete Product", callback_data="admin_delete_product")],
+            [InlineKeyboardButton(text="🗑️ Delete Product", callback_data="admin_delete_product"),
+             InlineKeyboardButton(text="💰 Add User Funds", callback_data="admin_add_funds")],
             [InlineKeyboardButton(text="🔙 Back to Admin Panel", callback_data="back_to_admin")]
         ])
         await call.message.answer("🛍️ <b>Product Management</b>", reply_markup=product_kb)
@@ -370,6 +371,9 @@ async def callbacks(call: types.CallbackQuery):
                 products_text += f"{idx}. {prod['name']} - ${prod['price']}\n"
             products_text += "\nTo delete, send: DELETE:ProductIndex\nExample: DELETE:0"
             await call.message.answer(products_text)
+
+    elif call.data == "admin_add_funds" and is_admin(user_id):
+        await call.message.answer("💰 <b>Add Funds to User</b>\n\nSend user details in this format:\nFUND:UserID:Amount\n\nExample: FUND:123456789:50\n\nThis will add $50 to user ID 123456789's balance.")
 
     elif call.data == "regular_shop" and is_admin(user_id):
         # Show regular shop interface for admin
@@ -857,6 +861,51 @@ async def handle_delete_product(message: types.Message):
         await message.reply("❌ Invalid format or index. Use: DELETE:ProductIndex")
     except Exception as e:
         await message.reply(f"❌ Error deleting product: {e}")
+
+@dp.message(F.text.startswith("FUND:"))
+async def handle_add_funds(message: types.Message):
+    user_id = message.from_user.id
+    if not is_admin(user_id):
+        return
+    
+    try:
+        parts = message.text.split(":")
+        if len(parts) != 3:
+            await message.reply("❌ Invalid format. Use: FUND:UserID:Amount")
+            return
+        
+        target_user_id = int(parts[1].strip())
+        amount = int(parts[2].strip())
+        
+        if amount <= 0:
+            await message.reply("❌ Amount must be greater than 0.")
+            return
+        
+        # Initialize user if they don't exist
+        if target_user_id not in USERS:
+            USERS[target_user_id] = {"balance": 0, "history": []}
+        
+        # Add funds to user account
+        old_balance = USERS[target_user_id]["balance"]
+        USERS[target_user_id]["balance"] += amount
+        USERS[target_user_id]["history"].append(f"Admin added ${amount} to account (Balance: ${old_balance} → ${USERS[target_user_id]['balance']})")
+        
+        await message.reply(f"✅ Successfully added ${amount} to user {target_user_id}'s account!\n💰 New Balance: ${USERS[target_user_id]['balance']}")
+        
+        # Notify the user if possible
+        try:
+            await bot.send_message(
+                target_user_id,
+                f"🎉 <b>Funds Added!</b>\n\nAn administrator has added ${amount} to your account!\n💰 Your new balance is: ${USERS[target_user_id]['balance']}"
+            )
+        except Exception as e:
+            logging.info(f"Could not notify user {target_user_id}: {e}")
+            await message.reply(f"ℹ️ User was credited but could not be notified (they may need to start the bot first).")
+        
+    except ValueError:
+        await message.reply("❌ Invalid format. User ID and Amount must be numbers. Use: FUND:UserID:Amount")
+    except Exception as e:
+        await message.reply(f"❌ Error adding funds: {e}")
 
 # ----------------------------
 # MESSAGE HANDLER FOR DEPOSITS
