@@ -20,7 +20,7 @@ MIN_DEPOSIT = 10  # Minimum deposit in USD
 # ----------------------------
 # LOGGING
 # ----------------------------
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
 # ----------------------------
 # BOT AND DISPATCHER
@@ -43,6 +43,7 @@ USERS = {}
 # ----------------------------
 @dp.message(Command("start"))
 async def start(message: types.Message):
+    logging.info(f"Start command received from user {message.from_user.id}")
     user_id = message.from_user.id
     if user_id not in USERS:
         USERS[user_id] = {"balance": 0, "history": []}
@@ -143,7 +144,11 @@ async def handle_deposit(message: types.Message):
 # RUN BOT
 # ----------------------------
 async def main():
-    await dp.start_polling(bot)
+    try:
+        logging.info("Starting bot...")
+        await dp.start_polling(bot)
+    except Exception as e:
+        logging.error(f"Error running bot: {e}")
 
 if __name__ == "__main__":
     import asyncio
