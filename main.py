@@ -52,7 +52,7 @@ async def start(message: types.Message):
         [InlineKeyboardButton(text="View Products", callback_data="view_products"),
          InlineKeyboardButton(text="Deposit", callback_data="deposit")],
         [InlineKeyboardButton(text="Purchase History", callback_data="history")],
-        [InlineKeyboardButton(text="Support", url="https://t.me/YOUR_SUPPORT_USERNAME")]
+        [InlineKeyboardButton(text="Support", url="https://t.me/Legitplaysonly")]
     ])
     await message.answer("Welcome to the Telegram Shop!", reply_markup=kb)
 
