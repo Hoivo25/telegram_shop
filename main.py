@@ -18,7 +18,7 @@ IPN_URL = "https://your-repl-url.repl.co/ipn"  # Replace with your actual Repl U
 MIN_DEPOSIT = 10  # Minimum deposit in USD
 
 # Admin Configuration
-ADMIN_ID = 123456789  # Replace with your Telegram user ID
+ADMIN_ID = 1802596609  # Replace with your Telegram user ID
 
 # ----------------------------
 # LOGGING
