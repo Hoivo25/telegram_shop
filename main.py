@@ -82,15 +82,15 @@ async def start(message: types.Message):
 # ----------------------------
 # CALLBACK HANDLERS
 # ----------------------------
-@dp.callback_query(F.data.in_(["view_products", "deposit", "history", "admin_stats", "admin_revenue", "admin_analytics", "admin_users", "regular_shop", "back_to_admin", "admin_products", "admin_add_product", "admin_edit_product", "admin_delete_product"]))
+@dp.callback_query(F.data.in_(["view_products", "deposit", "history", "admin_stats", "admin_revenue", "admin_analytics", "admin_users", "regular_shop", "back_to_admin", "admin_products", "admin_add_product", "admin_edit_product", "admin_delete_product", "cards_page_2"]))
 async def callbacks(call: types.CallbackQuery):
     user_id = call.from_user.id
     if user_id not in USERS:
         USERS[user_id] = {"balance": 0, "history": []}
 
     if call.data == "view_products":
-        # Card listings
-        card_text = "🏦 <b>Available Cards</b>\n\n"
+        # Card listings - Page 1
+        card_text = "🏦 <b>Available Cards - Page 1</b>\n\n"
         card_text += "1. 435880xx:US$317.39: 🔒 at 50%\n"
         card_text += "2. 435880xx:US$310.15: 🔒 at 50%\n"
         card_text += "3. 435880xx:US$303.42: 🔒 at 50%\n"
@@ -109,10 +109,15 @@ async def callbacks(call: types.CallbackQuery):
         # Keep the original products as well
         card_text += "<b>Other Products:</b>"
         
-        kb = InlineKeyboardMarkup(inline_keyboard=[
+        # Create keyboard with pagination and product buttons
+        product_buttons = [
             [InlineKeyboardButton(text=f"{prod['name']} - ${prod['price']}", callback_data=f"buy_{idx}")]
             for idx, prod in enumerate(PRODUCTS)
-        ])
+        ]
+        # Add pagination button
+        product_buttons.append([InlineKeyboardButton(text="➡️ Next Page", callback_data="cards_page_2")])
+        
+        kb = InlineKeyboardMarkup(inline_keyboard=product_buttons)
         await call.message.answer(card_text, reply_markup=kb)
 
     elif call.data == "history":
@@ -251,6 +256,38 @@ async def callbacks(call: types.CallbackQuery):
              InlineKeyboardButton(text="🛒 Regular Shop", callback_data="regular_shop")]
         ])
         await call.message.answer("🔧 <b>Admin Panel</b>", reply_markup=admin_kb)
+
+    elif call.data == "cards_page_2":
+        # Card listings - Page 2
+        card_text = "🏦 <b>Available Cards - Page 2</b>\n\n"
+        card_text += "1. 435880xx:US$33.66: ✅ at 40% ⚠️\n"
+        card_text += "2. 403446xx:US$33.47: ✅ at 40%\n"
+        card_text += "3. 403446xx:US$33.40: 🔒 at 40%\n"
+        card_text += "4. 451129xx:US$33.06: 🔒 at 40% ⚠️\n"
+        card_text += "5. 435880xx:US$32.98: 🔒 at 40%\n"
+        card_text += "6. 435880xx:US$32.93: 🔒 at 40%\n"
+        card_text += "7. 403446xx:US$32.70: ✅ at 40%\n"
+        card_text += "8. 491277xx:US$32.61: ✅ at 40%\n"
+        card_text += "9. 403446xx:US$32.57: ✅ at 40%\n"
+        card_text += "10. 435880xx:US$32.51: 🔒 at 40%\n\n"
+        card_text += "<b>Legend:</b>\n"
+        card_text += "🔒 - Card is registered\n"
+        card_text += "✅ - Card is not registered\n"
+        card_text += "⚠️ - Card has been used on Google\n\n"
+        
+        # Keep the original products as well
+        card_text += "<b>Other Products:</b>"
+        
+        # Create keyboard with pagination and product buttons
+        product_buttons = [
+            [InlineKeyboardButton(text=f"{prod['name']} - ${prod['price']}", callback_data=f"buy_{idx}")]
+            for idx, prod in enumerate(PRODUCTS)
+        ]
+        # Add back to page 1 button
+        product_buttons.append([InlineKeyboardButton(text="⬅️ Previous Page", callback_data="view_products")])
+        
+        kb = InlineKeyboardMarkup(inline_keyboard=product_buttons)
+        await call.message.answer(card_text, reply_markup=kb)
 
     await call.answer()
 
