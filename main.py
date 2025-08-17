@@ -45,19 +45,7 @@ PRODUCTS_PAGE_1 = [
     {"name": "Card 10", "price": 117}, # 40% of $292.32
 ]
 
-# Products with 40% of card values - Page 2 (1-10)
-PRODUCTS_PAGE_2 = [
-    {"name": "Card 1", "price": 13},   # 40% of $33.66
-    {"name": "Card 2", "price": 13},   # 40% of $33.47
-    {"name": "Card 3", "price": 13},   # 40% of $33.40
-    {"name": "Card 4", "price": 13},   # 40% of $33.06
-    {"name": "Card 5", "price": 13},   # 40% of $32.98
-    {"name": "Card 6", "price": 13},   # 40% of $32.93
-    {"name": "Card 7", "price": 13},   # 40% of $32.70
-    {"name": "Card 8", "price": 13},   # 40% of $32.61
-    {"name": "Card 9", "price": 13},   # 40% of $32.57
-    {"name": "Card 10", "price": 13},  # 40% of $32.51
-]
+
 
 # Products with 40% of card values - Page 3 (1-10)
 PRODUCTS_PAGE_3 = [
@@ -172,7 +160,7 @@ PRODUCTS_PAGE_10 = [
 ]
 
 # Combined products for backwards compatibility
-PRODUCTS = PRODUCTS_PAGE_1 + PRODUCTS_PAGE_2 + PRODUCTS_PAGE_3 + PRODUCTS_PAGE_4 + PRODUCTS_PAGE_5 + PRODUCTS_PAGE_6 + PRODUCTS_PAGE_7 + PRODUCTS_PAGE_8 + PRODUCTS_PAGE_9 + PRODUCTS_PAGE_10
+PRODUCTS = PRODUCTS_PAGE_1 + PRODUCTS_PAGE_3 + PRODUCTS_PAGE_4 + PRODUCTS_PAGE_5 + PRODUCTS_PAGE_6 + PRODUCTS_PAGE_7 + PRODUCTS_PAGE_8 + PRODUCTS_PAGE_9 + PRODUCTS_PAGE_10
 
 # In-memory storage
 USERS = {}
@@ -218,7 +206,7 @@ async def start(message: types.Message):
 # ----------------------------
 # CALLBACK HANDLERS
 # ----------------------------
-@dp.callback_query(F.data.in_(["view_products", "deposit", "history", "admin_stats", "admin_revenue", "admin_analytics", "admin_users", "regular_shop", "back_to_admin", "admin_products", "admin_add_product", "admin_edit_product", "admin_delete_product", "admin_add_funds", "cards_page_2", "cards_page_3", "cards_page_4", "cards_page_5", "cards_page_6", "cards_page_7", "cards_page_8", "cards_page_9", "cards_page_10"]))
+@dp.callback_query(F.data.in_(["view_products", "deposit", "history", "admin_stats", "admin_revenue", "admin_analytics", "admin_users", "regular_shop", "back_to_admin", "admin_products", "admin_add_product", "admin_edit_product", "admin_delete_product", "admin_add_funds", "cards_page_3", "cards_page_4", "cards_page_5", "cards_page_6", "cards_page_7", "cards_page_8", "cards_page_9", "cards_page_10"]))
 async def callbacks(call: types.CallbackQuery):
     user_id = call.from_user.id
     if user_id not in USERS:
@@ -250,7 +238,7 @@ async def callbacks(call: types.CallbackQuery):
             for idx, prod in enumerate(PRODUCTS_PAGE_1)
         ]
         # Add pagination button
-        product_buttons.append([InlineKeyboardButton(text="➡️ Next Page", callback_data="cards_page_2")])
+        product_buttons.append([InlineKeyboardButton(text="➡️ Next Page", callback_data="cards_page_3")])
         
         kb = InlineKeyboardMarkup(inline_keyboard=product_buttons)
         await call.message.answer(card_text, reply_markup=kb)
@@ -396,41 +384,6 @@ async def callbacks(call: types.CallbackQuery):
         ])
         await call.message.answer("🔧 <b>Admin Panel</b>", reply_markup=admin_kb)
 
-    elif call.data == "cards_page_2":
-        # Card listings - Page 2
-        card_text = "🏦 <b>Available Cards - Page 2</b>\n\n"
-        card_text += "1. 435880xx:US$33.66: ✅ at 40% ⚠️\n"
-        card_text += "2. 403446xx:US$33.47: ✅ at 40%\n"
-        card_text += "3. 403446xx:US$33.40: 🔒 at 40%\n"
-        card_text += "4. 451129xx:US$33.06: 🔒 at 40% ⚠️\n"
-        card_text += "5. 435880xx:US$32.98: 🔒 at 40%\n"
-        card_text += "6. 435880xx:US$32.93: 🔒 at 40%\n"
-        card_text += "7. 403446xx:US$32.70: ✅ at 40%\n"
-        card_text += "8. 491277xx:US$32.61: ✅ at 40%\n"
-        card_text += "9. 403446xx:US$32.57: ✅ at 40%\n"
-        card_text += "10. 435880xx:US$32.51: 🔒 at 40%\n\n"
-        card_text += "<b>Legend:</b>\n"
-        card_text += "🔒 - Card is registered\n"
-        card_text += "✅ - Card is not registered\n"
-        card_text += "⚠️ - Card has been used on Google\n\n"
-        
-        card_text += "<b>Products (1-10):</b>"
-        
-        # Create keyboard with only page 2 products (numbered 1-10)
-        product_buttons = [
-            [InlineKeyboardButton(text=f"{idx+1}. {prod['name']} - ${prod['price']}", callback_data=f"buy_page2_{idx}")]
-            for idx, prod in enumerate(PRODUCTS_PAGE_2)
-        ]
-        # Add navigation buttons
-        nav_buttons = [
-            InlineKeyboardButton(text="⬅️ Previous Page", callback_data="view_products"),
-            InlineKeyboardButton(text="➡️ Next Page", callback_data="cards_page_3")
-        ]
-        product_buttons.append(nav_buttons)
-        
-        kb = InlineKeyboardMarkup(inline_keyboard=product_buttons)
-        await call.message.answer(card_text, reply_markup=kb)
-
     elif call.data == "cards_page_3":
         # Card listings - Page 3
         card_text = "🏦 <b>Available Cards - Page 3</b>\n\n"
@@ -458,7 +411,7 @@ async def callbacks(call: types.CallbackQuery):
         ]
         # Add navigation buttons
         nav_buttons = [
-            InlineKeyboardButton(text="⬅️ Previous Page", callback_data="cards_page_2"),
+            InlineKeyboardButton(text="⬅️ Previous Page", callback_data="view_products"),
             InlineKeyboardButton(text="➡️ Next Page", callback_data="cards_page_4")
         ]
         product_buttons.append(nav_buttons)
@@ -725,9 +678,6 @@ async def buy_product(call: types.CallbackQuery):
         if page == "page1":
             product = PRODUCTS_PAGE_1[idx]
             product_display_name = f"Page 1 - {product['name']}"
-        elif page == "page2":
-            product = PRODUCTS_PAGE_2[idx]
-            product_display_name = f"Page 2 - {product['name']}"
         elif page == "page3":
             product = PRODUCTS_PAGE_3[idx]
             product_display_name = f"Page 3 - {product['name']}"
