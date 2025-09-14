@@ -1,35 +1,16 @@
-import asyncio
-import logging
-import uuid
-import requests
-from aiogram import Bot, Dispatcher, types, F
-from aiogram.enums import ParseMode
-from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
-from aiogram.filters import Command
-from aiogram.client.default import DefaultBotProperties
+import os
 
 # ----------------------------
 # CONFIGURATION
 # ----------------------------
-API_TOKEN = "8314185541:AAFEYygE6RX6jBuiU5gUR4ze4S37PuCkrNw"
-NOWPAYMENTS_API_KEY = "WEP7ZF7-MJ44V90-G433PT9-HGDER2Q"
-IPN_URL = "https://your-repl-url.repl.co/ipn"  # Replace with your actual Repl URL
+API_TOKEN = os.getenv("BOT_TOKEN")  # ✅ Load from environment
+NOWPAYMENTS_API_KEY = os.getenv("NOWPAYMENTS_API_KEY")  # also load securely
+IPN_URL = os.getenv("IPN_URL", "https://your-repl-url.repl.co/ipn")  # fallback default
 
 MIN_DEPOSIT = 10  # Minimum deposit in USD
 
 # Admin Configuration
-ADMIN_ID = 1802596609  # Replace with your Telegram user ID
-
-# ----------------------------
-# LOGGING
-# ----------------------------
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-
-# ----------------------------
-# BOT AND DISPATCHER
-# ----------------------------
-bot = Bot(token=API_TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
-dp = Dispatcher()
+ADMIN_ID = int(os.getenv("ADMIN_ID", "1802596609"))  # fallback to your ID
 
 # Products with 40% of card values - Page 1 (1-10)
 PRODUCTS_PAGE_1 = [
